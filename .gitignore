@@ -8,3 +8,5 @@ dist/*.map
 !.env.example
 *.tgz
 .pnpm-store/
+
+.githooks/
