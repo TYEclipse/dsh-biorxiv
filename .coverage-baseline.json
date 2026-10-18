@@ -1,4 +1,8 @@
 {
+  "percent_covered": 100,
+  "version": "0.1.0-alpha.20",
+  "updated_at": "2026-10-19 06:48:00",
+  "note": "maintenance-ledger compatibility; raw coverage summary retained",
   "total": {
     "lines": {
       "total": 927,
