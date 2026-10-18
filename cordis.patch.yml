@@ -1,0 +1,4 @@
+# dsh-biorxiv bundle patch: mount this plugin into the profile as one layer row.
+- insert:
+    - id: biorxiv
+      name: dsh-biorxiv

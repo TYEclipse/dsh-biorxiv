@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Local gate: code/test/package changes must keep tests green and line coverage >= baseline.
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+CHANGED="$(git diff --cached --name-only)"
+if ! printf '%s\n' "$CHANGED" | grep -Eq '^(src/|test/|package\.json$|tsconfig\.json$|vitest\.config\.ts$|scripts/coverage-ratchet\.mjs$)'; then
+  echo "docs-only change: coverage gate skipped"
+  exit 0
+fi
+if [ "${SKIP_GATES:-}" = "1" ]; then
+  echo "SKIP_GATES=1: coverage gate skipped"
+  exit 0
+fi
+pnpm test
+pnpm coverage
+node scripts/coverage-ratchet.mjs --check

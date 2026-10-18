@@ -1,0 +1,59 @@
+{
+  "name": "dsh-biorxiv",
+  "version": "0.1.0-alpha.19",
+  "description": "bioRxiv preprint search, status and export tools for DeepSeek Harness (dsh) — zero runtime dependencies",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "dsh-biorxiv": "dist/apps/cli/main.js",
+    "dsh-biorxiv-mcp": "dist/apps/mcp/main.js"
+  },
+  "files": [
+    "dist",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "skills",
+    "scripts/smoke.mjs",
+    "scripts/coverage-ratchet.mjs"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "coverage:check": "node scripts/coverage-ratchet.mjs --check",
+    "coverage:update": "node scripts/coverage-ratchet.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "biorxiv",
+    "preprint",
+    "europepmc",
+    "research"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-agent": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.6",
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "@types/node": "^24.13.3",
+    "@vitest/coverage-v8": "3.2.7",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
