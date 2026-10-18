@@ -1,6 +1,6 @@
 {
   "name": "dsh-biorxiv",
-  "version": "0.1.0-alpha.19",
+  "version": "0.1.0-alpha.20",
   "description": "bioRxiv preprint search, status and export tools for DeepSeek Harness (dsh) — zero runtime dependencies",
   "type": "module",
   "main": "dist/index.js",
@@ -13,6 +13,7 @@
     "dist",
     "cordis.patch.yml",
     "README.md",
+    "PRIVACY.md",
     "LICENSE",
     "CHANGELOG.md",
     "skills",

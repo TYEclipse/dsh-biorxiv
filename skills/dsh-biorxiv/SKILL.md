@@ -77,5 +77,5 @@ biorxiv_export { "query": "hippocampal ripple", "format": "markdown", "out": "re
 
 - Do not send internal notes, unpublished data or personal information to the model.
 - The plugin does not store query plaintext in cache keys; logs contain metadata only.
-- AI summaries are not part of `0.1.0-alpha`; do not claim they exist.
+- AI summaries are opt-in and off by default; when enabled, label them machine-generated and verify them against the abstract.
 - Preprints are not peer-reviewed; never present them as clinical evidence.

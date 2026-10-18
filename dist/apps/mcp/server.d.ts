@@ -2,7 +2,7 @@
 import type { ToolSet } from '../dsh/tools.ts';
 export declare const MCP_PROTOCOL_VERSION = "2024-11-05";
 export declare const SERVER_NAME = "dsh-biorxiv";
-export declare const SERVER_VERSION = "0.1.0-alpha.19";
+export declare const SERVER_VERSION: string;
 export interface McpRequest {
     jsonrpc: '2.0';
     id?: string | number | null;

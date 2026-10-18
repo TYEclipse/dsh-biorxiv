@@ -1,12 +1,16 @@
 /** Minimal MCP stdio server (JSON-RPC 2.0) with no extra runtime dependency. */
 
 import { createInterface } from 'node:readline'
+import { createRequire } from 'node:module'
 import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
 import type { ToolSet } from '../dsh/tools.ts'
 
 export const MCP_PROTOCOL_VERSION = '2024-11-05'
 export const SERVER_NAME = 'dsh-biorxiv'
-export const SERVER_VERSION = '0.1.0-alpha.19'
+
+const require = createRequire(import.meta.url)
+const packageJson = require('../../../package.json') as { version: string }
+export const SERVER_VERSION = packageJson.version
 
 export interface McpRequest {
   jsonrpc: '2.0'

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.20 — 2026-10-19
+
+- MCP `serverInfo.version` now derives from `package.json` instead of a hardcoded string; a regression test fails on version drift.
+- Packaged docs are checked for links to private project files; removed the private evidence reference from the shipped skill.
+- README: MCP tool list now includes `biorxiv_digest`; install example uses a version placeholder.
+- Added `PRIVACY.md` to the package and documented the public-data boundary.
+
 ## 0.1.0-alpha.19 — 2026-10-18
 
 - CLI `--summary` explicitly enables the summary provider (requires the configured key env); MCP enables it with `DSH_BIORXIV_SUMMARY=1`.

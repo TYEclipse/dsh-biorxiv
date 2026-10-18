@@ -1,8 +1,11 @@
 /** Minimal MCP stdio server (JSON-RPC 2.0) with no extra runtime dependency. */
 import { createInterface } from 'node:readline';
+import { createRequire } from 'node:module';
 export const MCP_PROTOCOL_VERSION = '2024-11-05';
 export const SERVER_NAME = 'dsh-biorxiv';
-export const SERVER_VERSION = '0.1.0-alpha.19';
+const require = createRequire(import.meta.url);
+const packageJson = require('../../../package.json');
+export const SERVER_VERSION = packageJson.version;
 function error(id, code, message) {
     return { jsonrpc: '2.0', id, error: { code, message } };
 }

@@ -27,18 +27,19 @@ On failure `ok` is `false`, `data` is `{}`, and `error.code` is one of `E-001`â€
 
 ## Install (one command)
 
-Build a tarball from this repository:
+```bash
+dsh plugin --profile headless add github:TYEclipse/dsh-biorxiv#v0.1.0-alpha.20
+```
+
+Replace `headless` with the target profile. `dsh plugin add` is a pnpm forwarder: a `--profile` is required, and `pnpm` must be on `PATH`.
+
+Build from source instead:
 
 ```bash
 pnpm install
 pnpm build
 pnpm pack
-```
-
-Install into a dsh profile:
-
-```bash
-dsh plugin --profile headless add file:/absolute/path/to/dsh-biorxiv-0.1.0-alpha.19.tgz
+dsh plugin --profile headless add "file:$PWD/$(ls -t dsh-biorxiv-*.tgz | head -1)"
 ```
 
 Verify:
@@ -83,7 +84,9 @@ MCP client config example:
 }
 ```
 
-The server exposes `biorxiv_search`, `biorxiv_paper`, `biorxiv_latest` and `biorxiv_export` with the same JSON envelope.
+An npm package is not published yet. The `npx` form above works after publication; for a GitHub install, point the client at `node ~/.dsh/profiles/<profile>/node_modules/dsh-biorxiv/dist/apps/mcp/main.js`.
+
+The server exposes `biorxiv_search`, `biorxiv_paper`, `biorxiv_latest`, `biorxiv_export` and `biorxiv_digest` with the same JSON envelope.
 
 ## Configuration
 
@@ -132,4 +135,4 @@ The coverage ratchet is enforced by `scripts/coverage-ratchet.mjs`; line coverag
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. See `LICENSE`. Privacy and data flow: see `PRIVACY.md`.
