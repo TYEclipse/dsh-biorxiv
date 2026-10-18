@@ -10,7 +10,7 @@ bioRxiv preprint search, version/publication status and export tools for DeepSee
 - `biorxiv_paper` — DOI lookup: latest version, publication DOI/journal, retraction flag when available.
 - `biorxiv_latest` — latest preprints by date window and optional category.
 - `biorxiv_export` — export search results or one DOI as JSON, Markdown, CSV or BibTeX.
-- `biorxiv_digest` — structured markdown digest (extractive; no AI summary, no automatic delivery).
+- `biorxiv_digest` — structured markdown digest (extractive by default; optional opt-in Chinese summaries; no automatic delivery).
 
 All tools return a stable envelope:
 
