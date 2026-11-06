@@ -1,3 +1,8 @@
+/**
+ * ORACLE: test/oracle/anchors.py
+ * Numeric expectations in this file are printed by the oracle; re-run
+ * `python3 test/oracle/anchors.py` before changing one.
+ */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { basename, dirname, join, normalize, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'

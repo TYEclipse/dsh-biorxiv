@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.21 — 2026-11-07
+
+- New tool `biorxiv_trend`: one Europe PMC hit count per completed calendar month plus the month in progress, with month-over-month and window-wide change. The running month is marked `complete: false`, normalised to hits per week, and excluded from totals, peak and both changes; a zero-hit baseline reports `percent: null` instead of a made-up percentage.
+- Same tool is exposed by the dsh surface, the MCP server and a new CLI command `trend <topic> [--months N] [--field …]`.
+- Test expectations now come from a committed oracle (`test/oracle/anchors.py`, sections A/B with `--check`): month spans (including leap February), per-week rounding, totals, peak tie-breaking and the percent rule are re-derived from the calendar module rather than restated.
+- 156 tests; 100% line coverage.
+
 ## 0.1.0-alpha.20 — 2026-10-19
 
 - MCP `serverInfo.version` now derives from `package.json` instead of a hardcoded string; a regression test fails on version drift.

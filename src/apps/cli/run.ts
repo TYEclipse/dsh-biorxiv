@@ -2,6 +2,7 @@
 
 import { digestTool } from '../../core/digest.ts'
 import { exportTool, latestTool, paperTool, searchTool, type ServiceDeps } from '../../core/service.ts'
+import { trendTool } from '../../core/trend.ts'
 import { createDeps } from '../../index.ts'
 
 export interface CliStream {
@@ -22,6 +23,7 @@ Commands:
   latest           [--days N] [--limit N] [--category NAME]
   export <topic>   [--format json|markdown|csv|bibtex] [--out PATH] [--force] [--limit N]
   digest <topic>   [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--limit N] [--summary]
+  trend <topic>    [--months N] [--field any|title|abstract]
   --help
 
 All commands print one JSON envelope: { ok, data, error, meta }.`
@@ -108,6 +110,15 @@ export async function runCli(
         dateTo: valueOf(argv, '--to'),
         limit: integer(valueOf(argv, '--limit')),
         summary: has(argv, '--summary'),
+      }),
+    )
+  }
+  if (command === 'trend') {
+    return rendered(
+      await trendTool(deps, {
+        topic: firstPositional(argv, 'trend') ?? '',
+        months: integer(valueOf(argv, '--months')),
+        field: valueOf(argv, '--field') as 'any' | 'title' | 'abstract' | undefined,
       }),
     )
   }

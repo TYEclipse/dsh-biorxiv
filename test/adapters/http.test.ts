@@ -1,3 +1,8 @@
+/**
+ * ORACLE: test/oracle/anchors.py
+ * Numeric expectations in this file are printed by the oracle; re-run
+ * `python3 test/oracle/anchors.py` before changing one.
+ */
 import { createServer, type Server } from 'node:http'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { HttpClient, buildUrl, validateHttpUrl } from '../../src/adapters/http.ts'

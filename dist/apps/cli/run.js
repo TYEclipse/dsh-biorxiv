@@ -1,6 +1,7 @@
 /** Scriptable CLI logic, separated from the bin entrypoint for testability. */
 import { digestTool } from "../../core/digest.js";
 import { exportTool, latestTool, paperTool, searchTool } from "../../core/service.js";
+import { trendTool } from "../../core/trend.js";
 import { createDeps } from "../../index.js";
 const DEFAULT_STREAM = {
     write: (text) => process.stdout.write(text),
@@ -14,6 +15,7 @@ Commands:
   latest           [--days N] [--limit N] [--category NAME]
   export <topic>   [--format json|markdown|csv|bibtex] [--out PATH] [--force] [--limit N]
   digest <topic>   [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--limit N] [--summary]
+  trend <topic>    [--months N] [--field any|title|abstract]
   --help
 
 All commands print one JSON envelope: { ok, data, error, meta }.`;
@@ -87,6 +89,13 @@ export async function runCli(argv, deps = createDeps({ summaryEnabled: argv.incl
             dateTo: valueOf(argv, '--to'),
             limit: integer(valueOf(argv, '--limit')),
             summary: has(argv, '--summary'),
+        }));
+    }
+    if (command === 'trend') {
+        return rendered(await trendTool(deps, {
+            topic: firstPositional(argv, 'trend') ?? '',
+            months: integer(valueOf(argv, '--months')),
+            field: valueOf(argv, '--field'),
         }));
     }
     stream.writeError(`unknown command: ${command}\n`);

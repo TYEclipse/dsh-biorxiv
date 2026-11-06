@@ -1,3 +1,8 @@
+/**
+ * ORACLE: test/oracle/anchors.py
+ * Numeric expectations in this file are printed by the oracle; re-run
+ * `python3 test/oracle/anchors.py` before changing one.
+ */
 import { PassThrough } from 'node:stream'
 import { describe, expect, it } from 'vitest'
 import { MemoryCache } from '../../src/adapters/cache.ts'
@@ -42,7 +47,7 @@ describe('handleMcpRequest', () => {
     })
   })
 
-  it('lists all four tools with JSON schemas', async () => {
+  it('lists all six tools with JSON schemas', async () => {
     const response = await handleMcpRequest({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, tools())
     const result = response.result as { tools: Array<{ name: string; inputSchema: unknown }> }
     expect(result.tools.map((tool) => tool.name)).toEqual([
@@ -51,6 +56,7 @@ describe('handleMcpRequest', () => {
       'biorxiv_latest',
       'biorxiv_export',
       'biorxiv_digest',
+      'biorxiv_trend',
     ])
     expect(result.tools[0]?.inputSchema).toMatchObject({ type: 'object' })
   })

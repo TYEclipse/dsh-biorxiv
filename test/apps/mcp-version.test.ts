@@ -1,3 +1,8 @@
+/**
+ * ORACLE: test/oracle/anchors.py
+ * Numeric expectations in this file are printed by the oracle; re-run
+ * `python3 test/oracle/anchors.py` before changing one.
+ */
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { SERVER_VERSION } from '../../src/apps/mcp/server.ts'

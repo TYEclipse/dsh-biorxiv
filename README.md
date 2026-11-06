@@ -11,6 +11,7 @@ bioRxiv preprint search, version/publication status and export tools for DeepSee
 - `biorxiv_latest` — latest preprints by date window and optional category.
 - `biorxiv_export` — export search results or one DOI as JSON, Markdown, CSV or BibTeX.
 - `biorxiv_digest` — structured markdown digest (extractive by default; optional opt-in Chinese summaries; no automatic delivery).
+- `biorxiv_trend` — month-by-month preprint volume for a topic: one hit count per completed calendar month plus the month in progress, with month-over-month and window-wide change. Counts come from the Europe PMC bioRxiv index; the running month is marked and excluded from totals.
 
 All tools return a stable envelope:
 
@@ -28,7 +29,7 @@ On failure `ok` is `false`, `data` is `{}`, and `error.code` is one of `E-001`�
 ## Install (one command)
 
 ```bash
-dsh plugin --profile headless add github:TYEclipse/dsh-biorxiv#v0.1.0-alpha.20
+dsh plugin --profile headless add github:TYEclipse/dsh-biorxiv#v0.1.0-alpha.21
 ```
 
 Replace `headless` with the target profile. `dsh plugin add` is a pnpm forwarder: a `--profile` is required, and `pnpm` must be on `PATH`.
@@ -59,6 +60,7 @@ dsh-biorxiv paper 10.64898/2026.07.21.739963
 dsh-biorxiv latest --days 2 --limit 10
 dsh-biorxiv export "hippocampal ripple" --format markdown --out refs.md
 dsh-biorxiv digest "protein language model" --limit 5
+dsh-biorxiv trend "protein language model" --months 6
 ```
 
 Each command prints one JSON envelope and exits `0` on success, `1` on a tool error, `2` on a usage error.
@@ -86,7 +88,7 @@ MCP client config example:
 
 An npm package is not published yet. The `npx` form above works after publication; for a GitHub install, point the client at `node ~/.dsh/profiles/<profile>/node_modules/dsh-biorxiv/dist/apps/mcp/main.js`.
 
-The server exposes `biorxiv_search`, `biorxiv_paper`, `biorxiv_latest`, `biorxiv_export` and `biorxiv_digest` with the same JSON envelope.
+The server exposes `biorxiv_search`, `biorxiv_paper`, `biorxiv_latest`, `biorxiv_export`, `biorxiv_digest` and `biorxiv_trend` with the same JSON envelope.
 
 ## Configuration
 

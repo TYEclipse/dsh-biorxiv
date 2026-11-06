@@ -1,3 +1,8 @@
+/**
+ * ORACLE: test/oracle/anchors.py
+ * Numeric expectations in this file are printed by the oracle; re-run
+ * `python3 test/oracle/anchors.py` before changing one.
+ */
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

@@ -1,3 +1,8 @@
+/**
+ * ORACLE: test/oracle/anchors.py
+ * Numeric expectations in this file are printed by the oracle; re-run
+ * `python3 test/oracle/anchors.py` before changing one.
+ */
 import { describe, expect, it } from 'vitest'
 import { fetchBiorxivDetails, fetchLatestBiorxiv } from '../../src/adapters/biorxiv.ts'
 import type { JsonClient } from '../../src/adapters/europepmc.ts'

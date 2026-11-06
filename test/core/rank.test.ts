@@ -1,3 +1,8 @@
+/**
+ * ORACLE: test/oracle/anchors.py
+ * Numeric expectations in this file are printed by the oracle; re-run
+ * `python3 test/oracle/anchors.py` before changing one.
+ */
 import { describe, expect, it } from 'vitest'
 import { dedupePapers, normalizeDoi, rankPapers, relevanceScore } from '../../src/core/rank.ts'
 import type { Paper } from '../../src/core/types.ts'

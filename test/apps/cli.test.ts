@@ -1,3 +1,8 @@
+/**
+ * ORACLE: test/oracle/anchors.py
+ * Numeric expectations in this file are printed by the oracle; re-run
+ * `python3 test/oracle/anchors.py` before changing one.
+ */
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -85,6 +90,15 @@ describe('runCli', () => {
     const parsed = JSON.parse(stream.out.join(''))
     expect(parsed.ok).toBe(true)
     expect(parsed.data.markdown).toContain('# bioRxiv digest')
+  })
+
+  it('runs trend and prints the bucketed envelope', async () => {
+    const stream = io()
+    expect(await runCli(['trend', 'protein language model', '--months', '2'], deps(), stream)).toBe(0)
+    const parsed = JSON.parse(stream.out.join(''))
+    expect(parsed.ok).toBe(true)
+    expect(parsed.data.buckets).toHaveLength(3)
+    expect(parsed.data.total).toBe(2)
   })
 
   it('returns 1 for a failed command and prints the error envelope', async () => {

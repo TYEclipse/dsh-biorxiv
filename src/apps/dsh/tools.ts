@@ -5,6 +5,7 @@ import type { Result } from '../../core/errors.ts'
 import type { ServiceDeps } from '../../core/service.ts'
 import { digestTool } from '../../core/digest.ts'
 import { exportTool, latestTool, paperTool, searchTool } from '../../core/service.ts'
+import { trendTool } from '../../core/trend.ts'
 
 export interface ToolSet {
   biorxiv_search: ToolDefinition
@@ -12,6 +13,7 @@ export interface ToolSet {
   biorxiv_latest: ToolDefinition
   biorxiv_export: ToolDefinition
   biorxiv_digest: ToolDefinition
+  biorxiv_trend: ToolDefinition
 }
 
 interface ToolEnvelope {
@@ -131,6 +133,40 @@ function renderDigest(value: unknown): string {
   return data.markdown ?? `${data.count ?? 0} digest item(s)`
 }
 
+function renderTrend(value: unknown): string {
+  const result = value as ToolEnvelope
+  if (!result.ok) return `${result.error.code}: ${result.error.message}`
+  const data = result.data as {
+    topic?: string
+    months?: number
+    dateFrom?: string
+    dateTo?: string
+    total?: number
+    buckets?: Array<{ label?: string; count?: number; perWeek?: number; complete?: boolean }>
+    peak?: { label?: string; count?: number }
+    monthOverMonth?: { absolute?: number; percent?: number | null } | null
+    overall?: { percent?: number | null } | null
+  }
+  const buckets = data.buckets ?? []
+  const lines = [`Trend for ${data.topic ?? ''} (${data.months ?? 0} month(s), ${data.dateFrom ?? ''} to ${data.dateTo ?? ''})`]
+  for (const bucket of buckets) {
+    lines.push(`${bucket.label ?? ''}${bucket.complete === false ? '*' : ''}  ${bucket.count ?? 0} · ${bucket.perWeek ?? 0}/week`)
+  }
+  lines.push(`Total (completed months only): ${data.total ?? 0}${data.peak?.label ? ` · peak ${data.peak.label} (${data.peak.count ?? 0})` : ''}`)
+  const mom = data.monthOverMonth
+  if (mom !== undefined && mom !== null) {
+    const percent = mom.percent === null || mom.percent === undefined ? 'baseline was 0' : `${mom.percent > 0 ? '+' : ''}${mom.percent}%`
+    lines.push(`Month over month: ${percent} (${mom.absolute ?? 0} preprint(s))`)
+  }
+  const overall = data.overall
+  if (overall !== undefined && overall !== null) {
+    const percent = overall.percent === null || overall.percent === undefined ? 'baseline was 0' : `${overall.percent > 0 ? '+' : ''}${overall.percent}%`
+    lines.push(`Over the window: ${percent}`)
+  }
+  lines.push('* current month so far — excluded from total, peak and both changes')
+  return lines.join('\n')
+}
+
 export function buildTools(deps: ServiceDeps): ToolSet {
   return {
     biorxiv_search: defineTool({
@@ -216,6 +252,20 @@ export function buildTools(deps: ServiceDeps): ToolSet {
       output: { schema: OUTPUT_SCHEMA, render: (_args: unknown, value: unknown) => text(renderDigest(value)) },
       async execute(args: { topic: string; dateFrom?: string; dateTo?: string; limit?: number; summary?: boolean }) {
         return envelope(await digestTool(deps, args))
+      },
+    }),
+    biorxiv_trend: defineTool({
+      name: 'biorxiv_trend',
+      description:
+        'Month-by-month preprint volume for a topic: one hit count per completed calendar month plus the month in progress, with month-over-month and window-wide change. Read-only; counts come from the Europe PMC bioRxiv preprint index.',
+      parameters: {
+        topic: { type: 'string', required: true, description: 'Topic phrase; use | for synonyms.' },
+        months: { type: 'number', description: 'Completed months to look back, 1–12 (default 6).' },
+        field: { type: 'string', enum: ['any', 'title', 'abstract'], description: 'Search field (default any).' },
+      },
+      output: { schema: OUTPUT_SCHEMA, render: (_args: unknown, value: unknown) => text(renderTrend(value)) },
+      async execute(args: { topic: string; months?: number; field?: 'any' | 'title' | 'abstract' }) {
+        return envelope(await trendTool(deps, args))
       },
     }),
   }

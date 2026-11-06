@@ -1,3 +1,8 @@
+/**
+ * ORACLE: test/oracle/anchors.py
+ * Numeric expectations in this file are printed by the oracle; re-run
+ * `python3 test/oracle/anchors.py` before changing one.
+ */
 import { describe, expect, it } from 'vitest'
 import { MemoryCache } from '../../src/adapters/cache.ts'
 import type { JsonClient } from '../../src/adapters/europepmc.ts'
@@ -47,13 +52,14 @@ function tools() {
 }
 
 describe('buildTools', () => {
-  it('registers exactly the five prefixed tools', () => {
+  it('registers exactly the six prefixed tools', () => {
     expect(Object.keys(tools())).toEqual([
       'biorxiv_search',
       'biorxiv_paper',
       'biorxiv_latest',
       'biorxiv_export',
       'biorxiv_digest',
+      'biorxiv_trend',
     ])
   })
 
@@ -81,5 +87,17 @@ describe('buildTools', () => {
     const blocks = tool.output.render({ topic: 'protein language model' }, result)
     expect(blocks[0]?.type).toBe('text')
     expect(blocks[0]?.text).toContain('Protein language model')
+  })
+
+  it('renders the trend table and marks the running month', async () => {
+    const tool = tools().biorxiv_trend as unknown as {
+      output: { render: (args: unknown, value: unknown) => Array<{ type: string; text: string }> }
+    }
+    const result = await exec(tool).execute({ topic: 'protein language model', months: 2 })
+    expect(result.ok).toBe(true)
+    const blocks = tool.output.render({ topic: 'protein language model' }, result)
+    expect(blocks[0]?.text).toContain('Trend for protein language model')
+    expect(blocks[0]?.text).toContain('Total (completed months only): 2')
+    expect(blocks[0]?.text).toContain('*')
   })
 })

@@ -7,6 +7,7 @@ export interface ToolSet {
     biorxiv_latest: ToolDefinition;
     biorxiv_export: ToolDefinition;
     biorxiv_digest: ToolDefinition;
+    biorxiv_trend: ToolDefinition;
 }
 export declare function buildTools(deps: ServiceDeps): ToolSet;
 //# sourceMappingURL=tools.d.ts.map
