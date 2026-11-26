@@ -138,32 +138,37 @@ function renderTrend(value: unknown): string {
   if (!result.ok) return `${result.error.code}: ${result.error.message}`
   const data = result.data as {
     topic?: string
+    bucket?: 'month' | 'week'
     months?: number
+    weeks?: number
     dateFrom?: string
     dateTo?: string
     total?: number
     buckets?: Array<{ label?: string; count?: number; perWeek?: number; complete?: boolean }>
     peak?: { label?: string; count?: number }
     monthOverMonth?: { absolute?: number; percent?: number | null } | null
+    weekOverWeek?: { absolute?: number; percent?: number | null } | null
     overall?: { percent?: number | null } | null
   }
+  const unit = data.bucket === 'week' ? 'week' : 'month'
+  const window = unit === 'week' ? data.weeks ?? 0 : data.months ?? 0
   const buckets = data.buckets ?? []
-  const lines = [`Trend for ${data.topic ?? ''} (${data.months ?? 0} month(s), ${data.dateFrom ?? ''} to ${data.dateTo ?? ''})`]
+  const lines = [`Trend for ${data.topic ?? ''} (${window} ${unit}(s), ${data.dateFrom ?? ''} to ${data.dateTo ?? ''})`]
   for (const bucket of buckets) {
     lines.push(`${bucket.label ?? ''}${bucket.complete === false ? '*' : ''}  ${bucket.count ?? 0} · ${bucket.perWeek ?? 0}/week`)
   }
-  lines.push(`Total (completed months only): ${data.total ?? 0}${data.peak?.label ? ` · peak ${data.peak.label} (${data.peak.count ?? 0})` : ''}`)
-  const mom = data.monthOverMonth
-  if (mom !== undefined && mom !== null) {
-    const percent = mom.percent === null || mom.percent === undefined ? 'baseline was 0' : `${mom.percent > 0 ? '+' : ''}${mom.percent}%`
-    lines.push(`Month over month: ${percent} (${mom.absolute ?? 0} preprint(s))`)
+  lines.push(`Total (completed ${unit}s only): ${data.total ?? 0}${data.peak?.label ? ` · peak ${data.peak.label} (${data.peak.count ?? 0})` : ''}`)
+  const step = unit === 'week' ? data.weekOverWeek : data.monthOverMonth
+  if (step !== undefined && step !== null) {
+    const percent = step.percent === null || step.percent === undefined ? 'baseline was 0' : `${step.percent > 0 ? '+' : ''}${step.percent}%`
+    lines.push(`${unit === 'week' ? 'Week over week' : 'Month over month'}: ${percent} (${step.absolute ?? 0} preprint(s))`)
   }
   const overall = data.overall
   if (overall !== undefined && overall !== null) {
     const percent = overall.percent === null || overall.percent === undefined ? 'baseline was 0' : `${overall.percent > 0 ? '+' : ''}${overall.percent}%`
     lines.push(`Over the window: ${percent}`)
   }
-  lines.push('* current month so far — excluded from total, peak and both changes')
+  lines.push(`* current ${unit} so far — excluded from total, peak and both changes`)
   return lines.join('\n')
 }
 
@@ -257,14 +262,22 @@ export function buildTools(deps: ServiceDeps): ToolSet {
     biorxiv_trend: defineTool({
       name: 'biorxiv_trend',
       description:
-        'Month-by-month preprint volume for a topic: one hit count per completed calendar month plus the month in progress, with month-over-month and window-wide change. Read-only; counts come from the Europe PMC bioRxiv preprint index.',
+        'Preprint volume for a topic bucketed by calendar month or ISO week: one hit count per completed bucket plus the one in progress, with bucket-over-bucket and window-wide change. Read-only; counts come from the Europe PMC bioRxiv preprint index.',
       parameters: {
         topic: { type: 'string', required: true, description: 'Topic phrase; use | for synonyms.' },
-        months: { type: 'number', description: 'Completed months to look back, 1–12 (default 6).' },
+        bucket: { type: 'string', enum: ['month', 'week'], description: 'Bucket size (default month).' },
+        months: { type: 'number', description: 'Completed calendar months to look back, 1–12 (default 6). Month buckets only.' },
+        weeks: { type: 'number', description: 'Completed ISO weeks to look back, 1–26 (default 8). Week buckets only.' },
         field: { type: 'string', enum: ['any', 'title', 'abstract'], description: 'Search field (default any).' },
       },
       output: { schema: OUTPUT_SCHEMA, render: (_args: unknown, value: unknown) => text(renderTrend(value)) },
-      async execute(args: { topic: string; months?: number; field?: 'any' | 'title' | 'abstract' }) {
+      async execute(args: {
+        topic: string
+        bucket?: 'month' | 'week'
+        months?: number
+        weeks?: number
+        field?: 'any' | 'title' | 'abstract'
+      }) {
         return envelope(await trendTool(deps, args))
       },
     }),

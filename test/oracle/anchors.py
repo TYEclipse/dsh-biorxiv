@@ -145,7 +145,7 @@ def per_week(count: int, days: int) -> float:
     return 0.0 if value == 0 else value
 
 
-def summarise(counts: list[int], spans: list[dict]) -> dict:
+def summarise(counts: list[int], spans: list[dict], latest_key: str = "monthOverMonth") -> dict:
     buckets = []
     for span, count in zip(spans, counts):
         buckets.append({**span, "count": count, "perWeek": per_week(count, span["days"])})
@@ -160,7 +160,7 @@ def summarise(counts: list[int], spans: list[dict]) -> dict:
     if len(completed) >= 2:
         mom = change(completed[-2], completed[-1])
         overall = change(completed[0], completed[-1])
-    return {"buckets": buckets, "total": total, "peak": peak, "monthOverMonth": mom, "overall": overall}
+    return {"buckets": buckets, "total": total, "peak": peak, latest_key: mom, "overall": overall}
 
 
 def change(before: dict, after: dict) -> dict:
@@ -199,6 +199,81 @@ def section_b() -> list[tuple[str, object]]:
     anchors.append(("trend: zero baseline absolute", two["monthOverMonth"]["absolute"]))
     anchors.append(("trend: february 2024 days", leap[0]["days"]))
     anchors.append(("trend: february 2024 span", f"{leap[0]['dateFrom']}..{leap[0]['dateTo']}"))
+    return anchors
+
+
+# ---------------------------------------------------------------- section C
+
+
+def iso_label_manual(day: date) -> str:
+    """ISO week label from the Thursday rule, derived independently of `isocalendar()`."""
+    thursday = day + timedelta(days=3 - day.weekday())
+    year_start = date(thursday.year, 1, 1)
+    week = (thursday - year_start).days // 7 + 1
+    return f"{thursday.year}-W{week:02d}"
+
+
+def week_spans(now: datetime, weeks: int) -> list[dict]:
+    """ISO weeks (Monday–Sunday) plus the running one, anchored on today's weekday."""
+    today = date(now.year, now.month, now.day)
+    monday = today - timedelta(days=today.weekday())
+    spans: list[dict] = []
+    for offset in range(weeks, 0, -1):
+        start = monday - timedelta(days=7 * offset)
+        iso = start.isocalendar()
+        spans.append(
+            {
+                "label": f"{iso.year}-W{iso.week:02d}",
+                "dateFrom": start.isoformat(),
+                "dateTo": (start + timedelta(days=6)).isoformat(),
+                "days": 7,
+                "complete": True,
+            }
+        )
+    iso = monday.isocalendar()
+    spans.append(
+        {
+            "label": f"{iso.year}-W{iso.week:02d}",
+            "dateFrom": monday.isoformat(),
+            "dateTo": today.isoformat(),
+            "days": (today - monday).days + 1,
+            "complete": False,
+        }
+    )
+    return spans
+
+
+EIGHT_WEEK_COUNTS = [3, 5, 4, 8, 6, 9, 7, 12, 2]
+
+
+def section_c() -> list[tuple[str, object]]:
+    spans = week_spans(NOW, 8)
+    result = summarise(EIGHT_WEEK_COUNTS, spans, "weekOverWeek")
+    anchors: list[tuple[str, object]] = []
+    for bucket in result["buckets"]:
+        anchors.append(
+            (
+                f"weekly: {bucket['label']} span",
+                f"{bucket['dateFrom']}..{bucket['dateTo']} days={bucket['days']} complete={bucket['complete']}",
+            )
+        )
+        anchors.append((f"weekly: {bucket['label']} perWeek for count {bucket['count']}", bucket["perWeek"]))
+    anchors.append(("weekly: total of completed weeks", result["total"]))
+    anchors.append(("weekly: peak label", result["peak"]["label"]))
+    anchors.append(("weekly: peak count", result["peak"]["count"]))
+    anchors.append(("weekly: weekOverWeek percent", result["weekOverWeek"]["percent"]))
+    anchors.append(("weekly: weekOverWeek absolute", result["weekOverWeek"]["absolute"]))
+    anchors.append(("weekly: overall percent", result["overall"]["percent"]))
+    anchors.append(("weekly: overall absolute", result["overall"]["absolute"]))
+    partial = result["buckets"][-1]
+    anchors.append(("weekly: running week days", partial["days"]))
+    anchors.append(("weekly: running week dateTo", partial["dateTo"]))
+    straddle = week_spans(datetime(2026, 1, 1, tzinfo=timezone.utc), 1)
+    anchors.append(("weekly: 2026-01-01 completed week label", straddle[0]["label"]))
+    anchors.append(("weekly: 2026-01-01 running week label", straddle[1]["label"]))
+    straddle_2027 = week_spans(datetime(2027, 1, 1, tzinfo=timezone.utc), 1)
+    anchors.append(("weekly: 2027-01-01 completed week label", straddle_2027[0]["label"]))
+    anchors.append(("weekly: 2027-01-01 running week label", straddle_2027[1]["label"]))
     return anchors
 
 
@@ -270,6 +345,49 @@ def self_check() -> list[str]:
         failures.append("no terms must score 0")
     if attempts_for(2) != 3:
         failures.append("retries=2 must mean 3 attempts")
+    # ---- weekly bucketing
+    weekly = week_spans(NOW, 8)
+    if len(weekly) != 9:
+        failures.append(f"week spans: expected 8 completed + 1 running, got {len(weekly)}")
+    for span in weekly[:-1]:
+        first = date.fromisoformat(span["dateFrom"])
+        last = date.fromisoformat(span["dateTo"])
+        if first.weekday() != 0:
+            failures.append(f"{span['label']} does not start on a Monday")
+        if last.weekday() != 6:
+            failures.append(f"{span['label']} does not end on a Sunday")
+        if (last - first).days + 1 != 7 or span["days"] != 7:
+            failures.append(f"{span['label']} is not seven days long")
+        if span["label"] != iso_label_manual(first):
+            failures.append(f"{span['label']} disagrees with the Thursday rule ({iso_label_manual(first)})")
+        iso = first.isocalendar()
+        if span["label"] != f"{iso.year}-W{iso.week:02d}":
+            failures.append(f"{span['label']} disagrees with isocalendar ({iso.year}-W{iso.week:02d})")
+    for earlier, later in zip(weekly, weekly[1:]):
+        gap = (date.fromisoformat(later["dateFrom"]) - date.fromisoformat(earlier["dateFrom"])).days
+        if gap != 7:
+            failures.append(f"{earlier['label']} -> {later['label']} is {gap} days apart")
+    running = weekly[-1]
+    if running["complete"]:
+        failures.append("the running week must be incomplete")
+    if running["dateTo"] != NOW.date().isoformat():
+        failures.append(f"the running week must stop at today, got {running['dateTo']}")
+    if running["days"] != NOW.date().weekday() + 1:
+        failures.append("the running week length must equal weekday index + 1")
+    weekly_result = summarise(EIGHT_WEEK_COUNTS, weekly, "weekOverWeek")
+    if weekly_result["total"] != sum(EIGHT_WEEK_COUNTS[:-1]):
+        failures.append("weekly total must exclude the running week")
+    if weekly_result["peak"]["count"] != max(EIGHT_WEEK_COUNTS[:-1]):
+        failures.append(f"weekly peak: {weekly_result['peak']}")
+    if weekly_result["weekOverWeek"]["absolute"] != EIGHT_WEEK_COUNTS[-2] - EIGHT_WEEK_COUNTS[-3]:
+        failures.append("weekOverWeek must compare the last two completed weeks")
+    if weekly_result["overall"]["absolute"] != EIGHT_WEEK_COUNTS[-2] - EIGHT_WEEK_COUNTS[0]:
+        failures.append("weekly overall must compare the first and last completed weeks")
+    if per_week(2, running["days"]) != round(2 * 7 / running["days"], 2):
+        failures.append("running-week perWeek normalisation is wrong")
+    new_year = week_spans(datetime(2027, 1, 1, tzinfo=timezone.utc), 1)
+    if not new_year[1]["label"].startswith("2026-W"):
+        failures.append(f"2027-01-01 must carry the 2026 week-numbering year, got {new_year[1]['label']}")
     return failures
 
 
@@ -293,6 +411,9 @@ def main(argv: list[str]) -> int:
     print("---")
     for name, value in section_b():
         print(f"B| {name}: {value}")
+    print("---")
+    for name, value in section_c():
+        print(f"C| {name}: {value}")
     return 0
 
 

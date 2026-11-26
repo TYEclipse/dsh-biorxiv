@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.0-alpha.22] — 2026-11-27
+### Patch · R112
+
+- `biorxiv_trend` can now bucket by **ISO week** (`bucket: "week"`, `weeks: 1–26`, default 8) as well as by calendar month. Week buckets run Monday–Sunday and are labelled with the ISO week-numbering year (`2026-W45`), which around New Year is not the calendar year — 2027-01-01 belongs to `2026-W53`.
+- The two modes report their own comparison field: month mode keeps `monthOverMonth` (unchanged shape), week mode returns `weekOverWeek`; `months` and `weeks` never appear together, and passing a knob that belongs to the other bucket size is rejected with `E-001` instead of being ignored.
+- Week mode exists for fast-moving topics where a month is too coarse: 8 weeks of weekly counts show a rise that a single month hides, at the cost of short windows (the running week is `complete: false` and excluded from totals, peak and both changes, normalised to hits per week).
+- Oracle gains section C (weekly spans, per-week rounding, totals, both changes, New Year labels) with `--check` invariants: every completed week starts on Monday and ends on Sunday, consecutive weeks are 7 days apart, labels agree with both `isocalendar()` and a hand-rolled Thursday rule, the running week stops at today, and the ISO year is used rather than the calendar year.
+- 165 tests (was 156); 100% line coverage.
+
 ## 0.1.0-alpha.21 — 2026-11-07
 
 - New tool `biorxiv_trend`: one Europe PMC hit count per completed calendar month plus the month in progress, with month-over-month and window-wide change. The running month is marked `complete: false`, normalised to hits per week, and excluded from totals, peak and both changes; a zero-hit baseline reports `percent: null` instead of a made-up percentage.

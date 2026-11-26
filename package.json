@@ -1,7 +1,7 @@
 {
   "name": "dsh-biorxiv",
-  "version": "0.1.0-alpha.21",
-  "description": "bioRxiv preprint search, status and export tools for DeepSeek Harness (dsh) — zero runtime dependencies",
+  "version": "0.1.0-alpha.22",
+  "description": "bioRxiv preprint search, status, trend and export tools for DeepSeek Harness (dsh) — zero runtime dependencies",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

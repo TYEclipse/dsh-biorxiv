@@ -23,7 +23,7 @@ Commands:
   latest           [--days N] [--limit N] [--category NAME]
   export <topic>   [--format json|markdown|csv|bibtex] [--out PATH] [--force] [--limit N]
   digest <topic>   [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--limit N] [--summary]
-  trend <topic>    [--months N] [--field any|title|abstract]
+  trend <topic>    [--bucket month|week] [--months N] [--weeks N] [--field any|title|abstract]
   --help
 
 All commands print one JSON envelope: { ok, data, error, meta }.`
@@ -117,7 +117,9 @@ export async function runCli(
     return rendered(
       await trendTool(deps, {
         topic: firstPositional(argv, 'trend') ?? '',
+        bucket: valueOf(argv, '--bucket') as 'month' | 'week' | undefined,
         months: integer(valueOf(argv, '--months')),
+        weeks: integer(valueOf(argv, '--weeks')),
         field: valueOf(argv, '--field') as 'any' | 'title' | 'abstract' | undefined,
       }),
     )

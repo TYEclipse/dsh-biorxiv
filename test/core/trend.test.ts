@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest'
 import { MemoryCache } from '../../src/adapters/cache.ts'
 import type { JsonClient } from '../../src/adapters/europepmc.ts'
-import { monthSpans, perWeek, trendTool } from '../../src/core/trend.ts'
+import { monthSpans, perWeek, trendTool, weekSpans } from '../../src/core/trend.ts'
 
 const NOW = Date.parse('2026-11-07T05:45:00Z')
 
@@ -147,5 +147,114 @@ describe('trendTool', () => {
     const result = await trendTool({ client: failing, cache: new MemoryCache(), now: () => NOW }, { topic: 'x' })
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.code).toBe('E-010')
+  })
+})
+
+const EIGHT_WEEKS = {
+  '2026-09-07:2026-09-13': 3,
+  '2026-09-14:2026-09-20': 5,
+  '2026-09-21:2026-09-27': 4,
+  '2026-09-28:2026-10-04': 8,
+  '2026-10-05:2026-10-11': 6,
+  '2026-10-12:2026-10-18': 9,
+  '2026-10-19:2026-10-25': 7,
+  '2026-10-26:2026-11-01': 12,
+  '2026-11-02:2026-11-07': 2,
+}
+
+describe('weekSpans', () => {
+  it('walks ISO weeks Monday–Sunday and stops the running week at today', () => {
+    const spans = weekSpans(NOW, 8)
+    expect(spans.map((span) => span.label)).toEqual([
+      '2026-W37',
+      '2026-W38',
+      '2026-W39',
+      '2026-W40',
+      '2026-W41',
+      '2026-W42',
+      '2026-W43',
+      '2026-W44',
+      '2026-W45',
+    ])
+    expect(spans[0]).toMatchObject({ dateFrom: '2026-09-07', dateTo: '2026-09-13', days: 7, complete: true })
+    expect(spans[7]).toMatchObject({ dateFrom: '2026-10-26', dateTo: '2026-11-01', days: 7 })
+    expect(spans[8]).toMatchObject({ dateFrom: '2026-11-02', dateTo: '2026-11-07', days: 6, complete: false })
+  })
+
+  it('labels the New Year weeks by ISO week-numbering year, not calendar year', () => {
+    expect(weekSpans(Date.parse('2026-01-01T00:00:00Z'), 1).map((span) => span.label)).toEqual(['2025-W52', '2026-W01'])
+    expect(weekSpans(Date.parse('2027-01-01T00:00:00Z'), 1).map((span) => span.label)).toEqual(['2026-W52', '2026-W53'])
+  })
+})
+
+describe('trendTool with week buckets', () => {
+  it('reports one bucket per ISO week with total, peak and both changes', async () => {
+    const result = await trendTool(deps(NOW, EIGHT_WEEKS), { topic: 'protein language model', bucket: 'week' })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const data = result.data
+    expect(data.bucket).toBe('week')
+    expect(data.weeks).toBe(8)
+    expect(data.months).toBeUndefined()
+    expect(data.monthOverMonth).toBeUndefined()
+    expect(data.total).toBe(54)
+    expect(data.peak).toEqual({ label: '2026-W44', count: 12 })
+    expect(data.buckets.map((bucket) => bucket.perWeek)).toEqual([3, 5, 4, 8, 6, 9, 7, 12, 2.33])
+    expect(data.weekOverWeek).toMatchObject({ fromLabel: '2026-W43', toLabel: '2026-W44', absolute: 5, percent: 71.4 })
+    expect(data.overall).toMatchObject({ fromLabel: '2026-W37', toLabel: '2026-W44', absolute: 9, percent: 300 })
+    expect(data.dateFrom).toBe('2026-09-07')
+    expect(data.dateTo).toBe('2026-11-07')
+    expect(data.note).toContain('ISO week')
+  })
+
+  it('keeps month and week results in separate cache entries', async () => {
+    const calls: Call[] = []
+    const shared = deps(NOW, { ...SIX_MONTH, ...EIGHT_WEEKS }, calls)
+    const first = await trendTool(shared, { topic: 'protein language model', months: 6 })
+    const weekly = await trendTool(shared, { topic: 'protein language model', bucket: 'week' })
+    const again = await trendTool(shared, { topic: 'protein language model', bucket: 'week' })
+    expect(first.ok && weekly.ok && again.ok).toBe(true)
+    if (!weekly.ok || !again.ok) return
+    expect(weekly.meta.cached).toBe(false)
+    expect(again.meta.cached).toBe(true)
+    expect(again.data.bucket).toBe('week')
+  })
+
+  it('refuses a knob that belongs to the other bucket size', async () => {
+    const weekWithMonths = await trendTool(deps(NOW, EIGHT_WEEKS), { topic: 'x', bucket: 'week', months: 3 })
+    const monthWithWeeks = await trendTool(deps(NOW, SIX_MONTH), { topic: 'x', weeks: 4 })
+    expect(weekWithMonths.ok).toBe(false)
+    expect(monthWithWeeks.ok).toBe(false)
+    if (!weekWithMonths.ok) expect(weekWithMonths.error.message).toContain('months only applies')
+    if (!monthWithWeeks.ok) expect(monthWithWeeks.error.message).toContain('weeks only applies')
+  })
+
+  it('refuses an unknown bucket size instead of guessing one', async () => {
+    const result = await trendTool(deps(NOW, EIGHT_WEEKS), { topic: 'x', bucket: 'day' as unknown as 'week' })
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error.code).toBe('E-001')
+      expect(result.error.message).toContain('bucket must be')
+    }
+  })
+
+  it('rejects weeks outside 1–26', async () => {
+    for (const weeks of [0, 27, 1.5]) {
+      const result = await trendTool(deps(NOW, EIGHT_WEEKS), { topic: 'x', bucket: 'week', weeks })
+      expect(result.ok).toBe(false)
+      if (!result.ok) expect(result.error.code).toBe('E-001')
+    }
+  })
+
+  it('gives no change figures with a single completed week', async () => {
+    const result = await trendTool(
+      deps(NOW, { '2026-10-26:2026-11-01': 12, '2026-11-02:2026-11-07': 2 }),
+      { topic: 'x', bucket: 'week', weeks: 1 },
+    )
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.total).toBe(12)
+    expect(result.data.weekOverWeek).toBeNull()
+    expect(result.data.overall).toBeNull()
   })
 })

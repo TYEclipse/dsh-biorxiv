@@ -100,4 +100,19 @@ describe('buildTools', () => {
     expect(blocks[0]?.text).toContain('Total (completed months only): 2')
     expect(blocks[0]?.text).toContain('*')
   })
+
+  it('renders the weekly variant with week wording instead of month wording', async () => {
+    const tool = tools().biorxiv_trend as unknown as {
+      output: { render: (args: unknown, value: unknown) => Array<{ type: string; text: string }> }
+    }
+    const result = await exec(tool).execute({ topic: 'protein language model', bucket: 'week', weeks: 2 })
+    expect(result.ok).toBe(true)
+    const blocks = tool.output.render({ topic: 'protein language model' }, result)
+    const text = blocks[0]?.text ?? ''
+    expect(text).toContain('(2 week(s)')
+    expect(text).toContain('Total (completed weeks only): 2')
+    expect(text).toContain('Week over week:')
+    expect(text).toContain('* current week so far')
+    expect(text).not.toContain('month')
+  })
 })

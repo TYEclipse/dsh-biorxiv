@@ -11,7 +11,7 @@ bioRxiv preprint search, version/publication status and export tools for DeepSee
 - `biorxiv_latest` — latest preprints by date window and optional category.
 - `biorxiv_export` — export search results or one DOI as JSON, Markdown, CSV or BibTeX.
 - `biorxiv_digest` — structured markdown digest (extractive by default; optional opt-in Chinese summaries; no automatic delivery).
-- `biorxiv_trend` — month-by-month preprint volume for a topic: one hit count per completed calendar month plus the month in progress, with month-over-month and window-wide change. Counts come from the Europe PMC bioRxiv index; the running month is marked and excluded from totals.
+- `biorxiv_trend` — preprint volume for a topic bucketed by calendar month or ISO week: one hit count per completed bucket plus the one in progress, with bucket-over-bucket and window-wide change. Counts come from the Europe PMC bioRxiv index; the running bucket is marked and excluded from totals. Month mode keeps `monthOverMonth`; week mode reports `weekOverWeek` and labels ISO weeks (`2026-W45`), whose year is the week-numbering year, not the calendar year.
 
 All tools return a stable envelope:
 
@@ -29,7 +29,7 @@ On failure `ok` is `false`, `data` is `{}`, and `error.code` is one of `E-001`�
 ## Install (one command)
 
 ```bash
-dsh plugin --profile headless add github:TYEclipse/dsh-biorxiv#v0.1.0-alpha.21
+dsh plugin --profile headless add github:TYEclipse/dsh-biorxiv#v0.1.0-alpha.22
 ```
 
 Replace `headless` with the target profile. `dsh plugin add` is a pnpm forwarder: a `--profile` is required, and `pnpm` must be on `PATH`.
@@ -61,6 +61,7 @@ dsh-biorxiv latest --days 2 --limit 10
 dsh-biorxiv export "hippocampal ripple" --format markdown --out refs.md
 dsh-biorxiv digest "protein language model" --limit 5
 dsh-biorxiv trend "protein language model" --months 6
+dsh-biorxiv trend "protein language model" --bucket week --weeks 8
 ```
 
 Each command prints one JSON envelope and exits `0` on success, `1` on a tool error, `2` on a usage error.
